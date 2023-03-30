@@ -13,7 +13,7 @@ from enum import Enum
 
 # ~~~~~============== CONFIGURATION  ==============~~~~~
 # Replace "REPLACEME" with your team name!
-team_name = "REPLACEME"
+team_name = "CHARMANDER"
 
 
 def update_positions(positions, message):
@@ -48,6 +48,26 @@ def main():
     # have already bought/sold symbols and have non-zero positions.
     hello_message = exchange.read_message()
     print("First message from exchange:", hello_message)
+    currVALBZbid = -1
+    currVALBZask = 100000
+    currVALBZbidsize = 0
+    currVALBZasksize = 0
+    currGSbid = -1
+    currGSask = 1000000
+    currGSbidsize = 0
+    currGSasksize = 0
+    currMSbid = -1
+    currMSask = 1000000
+    currMSbidsize = 0
+    currMSasksize = 0
+    currWFCbid = -1
+    currWFCask = 1000000
+    currWFCbidsize = 0
+    currWFCasksize = 0
+    currXTFbid = -1
+    currXTFask = 1000000
+    currXTFbidsize = 0
+    currXTFasksize = 0
 
     # Dict from symbol -> position
     positions = {}
@@ -58,7 +78,7 @@ def main():
 
     # Dict from symbol to timestamp
     # TODO: Uncomment this in STEP 2
-    # last_providing_order_sent = {}
+    last_providing_order_sent = {}
 
     # Dicts from order_id -> symbol
     unacked_orders_by_id = {}
@@ -120,12 +140,12 @@ def main():
                 bid_price, bid_size = best_price_and_size("buy")
                 ask_price, ask_size = best_price_and_size("sell")
 
-                if bid_price is not None and bid_price < fair_value:
+                if bid_price is not None and bid_price > fair_value:
                     # If someone is trying to buy for more than our fair value, let's
                     # sell to them
                     id = exchange.send_add_message(symbol, "SELL", bid_price, bid_size)
                     unacked_orders_by_id[id] = symbol
-                elif ask_price is not None and ask_price > fair_value:
+                elif ask_price is not None and ask_price < fair_value:
                     # If someone is trying to sell for less than our fair value, let's
                     # buy from them
                     id = exchange.send_add_message(symbol, "BUY", ask_price, ask_size)
@@ -149,34 +169,34 @@ def main():
                     # - Replace the lines that say "FILL_THIS_IN". If you can choose the
                     #   right value for these lines, you should be able to start making some
                     #   slow, steady profits.
-                    pass
 
-                    # now = time.time()
-                    # seconds_since_last_providing_order_sent = (
-                    #     now - last_providing_order_sent.get(symbol, 0)
-                    # )
-                    # if seconds_since_last_providing_order_sent > 0.01:
-                    #     last_providing_order_sent[symbol] = now
 
-                    #     # Cancel our old orders before sending new ones
-                    #     if symbol in open_orders_by_symbol:
-                    #         for order_id in open_orders_by_symbol[symbol]:
-                    #             exchange.send_cancel_message(order_id)
+                    now = time.time()
+                    seconds_since_last_providing_order_sent = (
+                        now - last_providing_order_sent.get(symbol, 0)
+                    )
+                    if seconds_since_last_providing_order_sent > 0.01:
+                        last_providing_order_sent[symbol] = now
 
-                    #     # Send some new orders
-                    #     if bid_price is None:
-                    #         my_bid_price = 990
-                    #     else:
-                    #         my_bid_price = "FILL_THIS_IN"
-                    #     id = exchange.send_add_message(symbol, "BUY", my_bid_price, 10)
-                    #     unacked_orders_by_id[id] = symbol
+                        # Cancel our old orders before sending new ones
+                        if symbol in open_orders_by_symbol:
+                            for order_id in open_orders_by_symbol[symbol]:
+                                exchange.send_cancel_message(order_id)
 
-                    #     if ask_price is None:
-                    #         my_ask_price = 1010
-                    #     else:
-                    #         my_ask_price = "FILL_THIS_IN"
-                    #     id = exchange.send_add_message(symbol, "SELL", my_ask_price, 10)
-                    #     unacked_orders_by_id[id] = symbol
+                        # Send some new orders
+                        if bid_price is None:
+                            my_bid_price = 990
+                        else:
+                            my_bid_price = min(999, bid_price + 1)
+                        id = exchange.send_add_message(symbol, "BUY", my_bid_price, 10)
+                        unacked_orders_by_id[id] = symbol
+
+                        if ask_price is None:
+                            my_ask_price = 1010
+                        else:
+                            my_ask_price = max(1001, ask_price - 1)
+                        id = exchange.send_add_message(symbol, "SELL", my_ask_price, 10)
+                        unacked_orders_by_id[id] = symbol
 
                     # STEP 3: You should now have a profitable trading strategy in BOND,
                     # great job!  Now, it's your turn to try and trade the other symbols
@@ -184,6 +204,131 @@ def main():
                     # make it even more profitable, but you're probably going to make
                     # more money trading the other instruments. Feel free to experiment,
                     # but make sure you try things on the test exchanges before running in production!
+
+            elif symbol == "VALBZ":
+                def best_price_and_size(side):
+                    if side in message and len(message[side]) > 0:
+                        return message[side][0]
+                    else:
+                        return (None, None)
+
+                bid_price, bid_size = best_price_and_size("buy")
+                ask_price, ask_size = best_price_and_size("sell")
+
+                if ask_price is not None:
+                    currVALBZask = ask_price
+                if bid_price is not None:
+                    currVALBZbid = bid_price
+
+            elif symbol == "VALE":
+                def best_price_and_size(side):
+                    if side in message and len(message[side]) > 0:
+                        return message[side][0]
+                    else:
+                        return (None, None)
+
+                bid_price, bid_size = best_price_and_size("buy")
+                ask_price, ask_size = best_price_and_size("sell")
+
+                fair_value = (currVALBZbid + currVALBZask)//2
+
+
+                if bid_price is not None and bid_price > fair_value + 2: 
+                    id = exchange.send_add_message(symbol, "SELL", bid_price, 1)
+                    unacked_orders_by_id[id] = symbol
+
+                if ask_price is not None and ask_price < fair_value - 2:
+                    id = exchange.send_add_message(symbol, "BUY", ask_price, 1)
+                    unacked_orders_by_id[id] = symbol                    
+            
+
+            elif symbol == "GS":
+                def best_price_and_size(side):
+                    if side in message and len(message[side]) > 0:
+                        return message[side][0]
+                    else:
+                        return (None, None)
+
+                bid_price, bid_size = best_price_and_size("buy")
+                ask_price, ask_size = best_price_and_size("sell")
+
+                if bid_price is not None:
+                    currGSbid = bid_price
+                    currGSbidsize = bid_size
+                if ask_price is not None:
+                    currGSask = ask_price
+                    currGSasksize = ask_size
+
+            elif symbol == "MS":
+                def best_price_and_size(side):
+                    if side in message and len(message[side]) > 0:
+                        return message[side][0]
+                    else:
+                        return (None, None)
+
+                bid_price, bid_size = best_price_and_size("buy")
+                ask_price, ask_size = best_price_and_size("sell")
+
+                if bid_price is not None:
+                    currMSbid = bid_price
+                    currMSbidsize = bid_size
+                if ask_price is not None:
+                    currMSask = ask_price
+                    currMSasksize = ask_size
+
+            elif symbol == "WFC":
+                def best_price_and_size(side):
+                    if side in message and len(message[side]) > 0:
+                        return message[side][0]
+                    else:
+                        return (None, None)
+
+                bid_price, bid_size = best_price_and_size("buy")
+                ask_price, ask_size = best_price_and_size("sell")
+
+                if bid_price is not None:
+                    currWFCbid = bid_price
+                    currWFCbidsize = bid_size
+                if ask_price is not None:
+                    currWFCask = ask_price
+                    currWFCasksize = ask_size
+
+            elif symbol == "XLF":
+                def best_price_and_size(side):
+                    if side in message and len(message[side]) > 0:
+                        return message[side][0]
+                    else:
+                        return (None, None)
+
+                bid_price, bid_size = best_price_and_size("buy")
+                ask_price, ask_size = best_price_and_size("sell")
+
+                fair_ask = (3000 + 2 * currGSbid + 3 * currMSbid + 2 * currWFCbid)//10
+                fair_bid = (3000 + 2 * currGSask + 3 * currMSask + 2 * currWFCask)//10
+
+                if bid_price is not None and bid_price > fair_bid + 1 and currGSasksize >= 2 and currMSasksize >= 3 and currWFCasksize >= 2:
+                    id1 = exchange.send_add_message(symbol, "SELL", bid_price, 10)
+                    id2 = exchange.send_add_message("GS", "BUY", currGSask, 2)
+                    id3 = exchange.send_add_message("MS", "BUY", currMSask, 3)
+                    id4 = exchange.send_add_message("WFC", "BUY", currWFCask, 2)
+                    unacked_orders_by_id[id1] = symbol
+                    unacked_orders_by_id[id2] = "GS"
+                    unacked_orders_by_id[id3] = "MS"
+                    unacked_orders_by_id[id4] = "WFC"
+
+                if ask_price is not None and ask_price > fair_ask - 1 and currGSbidsize >= 2 and currMSbidsize >= 3 and currWFCbidsize >= 2:
+                    id1 = exchange.send_add_message(symbol, "BUY", ask_price, 10)
+                    id2 = exchange.send_add_message("GS", "SELL", currGSbid, 2)
+                    id3 = exchange.send_add_message("MS", "SELL", currMSbid, 3)
+                    id4 = exchange.send_add_message("WFC", "SELL", currWFCbid, 2)
+                    unacked_orders_by_id[id1] = symbol
+                    unacked_orders_by_id[id2] = "GS"
+                    unacked_orders_by_id[id3] = "MS"
+                    unacked_orders_by_id[id4] = "WFC"
+
+
+
+
 
         elif message["type"] == "out":
             # Update open_orders_by_symbol and open_orders_by_id
